@@ -14,16 +14,23 @@ class ScreenColor(object):
     be processed from the screen as well as methods for data
     about the colors on the screen.
 
-    Attributes:
-        width:  the width if the screen in pixels  (Default is 1920)
-        height: the height of the screen in pixels (Default is 1080)
-        jump:   the interval of pixels to process  (Default is 1: every pixel on the screen is processed)
-        pixels: the total number of pixels to be processed
+    Attributes (Default):
+        start_x: starting x coordinate  (0)
+        end_x: ending x coordinate (1920)
+        start_y: staring y coordinate (0)
+        end_y: ending y coordinate (1080)
+        jump: the interval of pixels to process (1: every pixel on the screen is processed)
+        duration: the duration of color change (500)
+        kelvin: the warmth-coolness of the color (0-9000)
     """
 
-    def __init__(self, width=1920, height=1080, jump=1, duration=500, kelvin=4500):
-        self.width = width
-        self.height = height
+    def __init__(self, start_x=0, end_x=1920, start_y=0, end_y=1080, jump=1, duration=500, kelvin=4500):
+        self.start_x = start_x
+        self.end_x = end_x
+        self.start_y = start_y
+        self.end_y = end_y
+        self.width = self.get_width()
+        self.height = self.get_height()
         self.jump = jump
         self.pixels = self.pixel_count()
         self.duration = duration
@@ -31,6 +38,10 @@ class ScreenColor(object):
 
     def pixel_count(self):
         return (self.height/self.jump) * (self.width/self.jump)
+    def get_width(self):
+        return (self.end_x - self.start_x)
+    def get_height(self):
+        return (self.end_y - self.start_y)
 
     def average_color(self):
         """
@@ -46,8 +57,8 @@ class ScreenColor(object):
         image = ImageGrab.grab()
 
         # Get average RGB Values
-        for y in range(0, self.height, self.jump):
-            for x in range(0, self.width, self.jump):
+        for y in range(self.start_y, self.end_y, self.jump):
+            for x in range(self.start_x, self.end_x, self.jump):
                 r, g, b = image.getpixel((x,y))
                 red += r
                 green += g
@@ -58,17 +69,18 @@ class ScreenColor(object):
         blue /= self.pixels
         # Convert values from the range 0-255 to 0-1
         rgb_color = self.scale_rgb_values((red, green, blue))
-        
+
         hue, saturation, brightness, kelvin = self.convert_rgb_to_hsbk(rgb_color)
+
         return (hue, saturation, brightness, kelvin, self.duration)
 
     def convert_rgb_to_hsbk(self, rgb_color):
-        # Converts HSL to HSBK (Kelvin is set to 50% as there is no appropriate conversion)
-        h, l, s = colorsys.rgb_to_hls(*rgb_color)
-
+        # Converts HSV to HSBK (Kelvin is set to 50% as there is no appropriate conversion)
+        h, s, v = colorsys.rgb_to_hsv(*rgb_color)
+        print(h, s, v)
         h = int(float(h) * 65535)
         s = int(float(s) * 65535)
-        b = int(float(l) * 65535)
+        b = int(float(v) * 65535)
         k = int(self.kelvin)
         return (h, s, b, k)
 

@@ -15,6 +15,7 @@ frame_address_byteswap = '8611'
 protocol_header_format = 'u64u16u16'
 protocol_header_byteswap = '822'
 
+# Packet building reference on LIFX forums: https://community.lifx.com/t/building-a-lifx-packet/59/3
 def send_packet(packet):
     # Broadcast the packet as a UDP message to all bulbs on the network. (Your broadcast IP address may vary?)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,10 +58,10 @@ def make_protocol_header(message_type):
     return protocol_header
 
 
-def set_color(screen_space):
+def set_color(screen_space, start, end):
     # Set the format of the payload for this type of message
-    payload_format = 'u8u16u16u16u16u32'
-    payload_byteswap = '122224'
+    payload_format = 'u8u8u16u16u16u16u32u8'
+    payload_byteswap = '11222241'
 
     # Use the payload format and the header formats to calculate the total size of the packet, in bytes
     packet_size = (sizeof(frame_header_format + frame_address_format + protocol_header_format + payload_format)) / 8
@@ -76,7 +77,7 @@ def set_color(screen_space):
     # order in the sequence this message is).
     frame_address = make_frame_address(0, 0, 0, 0)
     # 3. Protocol header: set message type to 102, which is a "SetColor" message.
-    protocol_header = make_protocol_header(102)
+    protocol_header = make_protocol_header(501)
     # 4. Add all the headers together.
     header = frame_header + frame_address + protocol_header
     # CREATE THE PAYLOAD
@@ -87,23 +88,27 @@ def set_color(screen_space):
     
     #print "\nhue %s %s\nsaturation %s %s\nbrightness %s %s\nkelvin %s %s\nduration %s %s" % (hue, hex(hue), saturation, hex(saturation), brightness, hex(brightness), kelvin, hex(kelvin), duration, hex(duration))
     # 2. Pack the payload information
-    unswapped_payload = pack (payload_format, 0, *average_screen_color)
-    #print "\nunswapped payload: %s" % hexlify(unswapped_payload)
+    unswapped_payload = pack (payload_format, start, end, *average_screen_color, 1)
+    print ("\nunswapped payload: %s" % hexlify(unswapped_payload))
     payload = byteswap(payload_byteswap, unswapped_payload)
-    #print "payload: %s" % hexlify(payload)
+    print ("payload: %s" % hexlify(payload))
 
     # CREATE THE PACKET AND SEND IT
     packet = header + payload
     send_packet(packet)
 
-
-
 def stream_lights():
-    screen_space = ScreenColor(1920, 1080, 10, 450, 4500)
+    screen_space = ScreenColor(0, 480, 0, 1080, 10, 450, 4500)
+    screen_space_2 = ScreenColor(480, 960, 0, 1080, 10, 450, 4500)
+    screen_space_3 = ScreenColor(960, 1440, 0, 1080, 10, 450, 4500)
+    screen_space_4 = ScreenColor(1440, 1920, 0, 1080, 10, 450, 4500)
     print("Gathering screen colors...")
     while True:
         sleep(0.5)
-        set_color(screen_space)
+        set_color(screen_space, 0, 2)
+        set_color(screen_space_2, 3, 5)
+        set_color(screen_space_3, 6, 8)
+        set_color(screen_space_4, 9, 10)
 
 if __name__ == '__main__':
     stream_lights()
