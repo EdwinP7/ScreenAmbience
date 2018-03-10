@@ -28,7 +28,7 @@ Attributes:
     jump: the interval of pixels to process  (Default is 1: every pixel on the screen is processed)
     duration: the duration of color change
 """
-screen_color = ScreenColor(1920, 1080, 100, 500, 4500)
+screen_color = ScreenColor(0, 1920, 0, 1080, 100, 500, 4500)
 # Get the average color of the screen, returns an HSBKD tuple
 # (Hue, Saturation, Brightness, Kelvin, Duration)
 screen_color.average_color()
