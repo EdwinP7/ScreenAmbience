@@ -1,5 +1,5 @@
 import colorsys
-from PIL import ImageGrab
+from PIL import ImageGrab, Image
 from random import randint
 
 RGB_SCALE = 255
@@ -20,15 +20,15 @@ class ScreenColor(object):
         start_y: staring y coordinate (0)
         end_y: ending y coordinate (1080)
         jump: the interval of pixels to process (1: every pixel on the screen is processed)
-        duration: the duration of color change (500)
+        duration: the duration of color change (100)
         kelvin: the warmth-coolness of the color (0-9000)
     """
 
-    def __init__(self, start_x=0, end_x=1920, start_y=0, end_y=1080, jump=1, duration=500, kelvin=4500):
-        self.start_x = start_x
-        self.end_x = end_x
-        self.start_y = start_y
-        self.end_y = end_y
+    def __init__(self, start_x=0, end_x=1920, start_y=0, end_y=1080, jump=1, duration=100, kelvin=4500):
+        self.start_x = int(start_x)
+        self.end_x = int(end_x)
+        self.start_y = int(start_y)
+        self.end_y = int(end_y)
         self.width = self.get_width()
         self.height = self.get_height()
         self.jump = jump
@@ -38,10 +38,13 @@ class ScreenColor(object):
 
     def pixel_count(self):
         return (self.height/self.jump) * (self.width/self.jump)
+    
     def get_width(self):
         return (self.end_x - self.start_x)
+    
     def get_height(self):
         return (self.end_y - self.start_y)
+
 
     def average_color(self):
         """
@@ -55,6 +58,8 @@ class ScreenColor(object):
         green = 0
         blue = 0
         image = ImageGrab.grab()
+        # Resize to 128x72 pixels image. Lower
+        image = image.resize((128,72))
 
         # Get average RGB Values
         for y in range(self.start_y, self.end_y, self.jump):
@@ -67,6 +72,7 @@ class ScreenColor(object):
         red /= self.pixels
         green /= self.pixels
         blue /= self.pixels
+        
         # Convert values from the range 0-255 to 0-1
         rgb_color = self.scale_rgb_values((red, green, blue))
 
@@ -77,7 +83,7 @@ class ScreenColor(object):
     def convert_rgb_to_hsbk(self, rgb_color):
         # Converts HSV to HSBK (Kelvin is set to 50% as there is no appropriate conversion)
         h, s, v = colorsys.rgb_to_hsv(*rgb_color)
-        print(h, s, v)
+        #print(h, s, v)
         h = int(float(h) * 65535)
         s = int(float(s) * 65535)
         b = int(float(v) * 65535)
@@ -94,5 +100,4 @@ class ScreenColor(object):
             green = RGB_SCALE
         if blue > RGB_SCALE:
             blue = RGB_SCALE
-
         return (red/RGB_SCALE, green/RGB_SCALE, blue/RGB_SCALE)
