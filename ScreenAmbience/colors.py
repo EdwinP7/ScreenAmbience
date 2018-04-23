@@ -4,8 +4,7 @@ from random import randint
 
 RGB_SCALE = 255
 
-
-class ScreenColor(object):
+class ScreenAmbience(object):
 
     """
     Contains information about the screen and pixels to be processed
@@ -14,17 +13,18 @@ class ScreenColor(object):
     be processed from the screen as well as methods for data
     about the colors on the screen.
 
-    Attributes (Default):
-        start_x: starting x coordinate  (0)
-        end_x: ending x coordinate (1920)
-        start_y: staring y coordinate (0)
-        end_y: ending y coordinate (1080)
-        jump: the interval of pixels to process (1: every pixel on the screen is processed)
-        duration: the duration of color change (100)
+    Attributes:
+        start_x: starting x coordinate
+        end_x: ending x coordinate
+        start_y: staring y coordinate
+        end_y: ending y coordinate
+        duration: the duration of color change
         kelvin: the warmth-coolness of the color (0-9000)
+        jump: the interval of pixels to process (1: every pixel on the screen is processed)
+        brightness_multiplier: (0.0-1.0: I've noticed 1.0 is too bright at times, 0.5 seems to give a nice balance)
     """
 
-    def __init__(self, start_x=0, end_x=1920, start_y=0, end_y=1080, jump=1, duration=100, kelvin=4500):
+    def __init__(self, start_x, end_x, start_y, end_y, ratio, duration=100, kelvin=4500, jump=1, brightness_multiplier=1.0):
         self.start_x = int(start_x)
         self.end_x = int(end_x)
         self.start_y = int(start_y)
@@ -32,13 +32,15 @@ class ScreenColor(object):
         self.width = self.get_width()
         self.height = self.get_height()
         self.jump = jump
-        self.pixels = self.pixel_count()
         self.duration = duration
         self.kelvin = kelvin
+        self.brightness_multiplier = brightness_multiplier
+        self.ratio = ratio
+        self.pixels = self.get_pixel_count()
 
-    def pixel_count(self):
+    def get_pixel_count(self):
         return (self.height/self.jump) * (self.width/self.jump)
-    
+
     def get_width(self):
         return (self.end_x - self.start_x)
     
@@ -58,8 +60,8 @@ class ScreenColor(object):
         green = 0
         blue = 0
         image = ImageGrab.grab()
-        # Resize to 128x72 pixels image. Lower
-        image = image.resize((128,72))
+        # Resize to image of given ratio
+        image = image.resize(self.ratio)
 
         # Get average RGB Values
         for y in range(self.start_y, self.end_y, self.jump):
@@ -83,10 +85,9 @@ class ScreenColor(object):
     def convert_rgb_to_hsbk(self, rgb_color):
         # Converts HSV to HSBK (Kelvin is set to 50% as there is no appropriate conversion)
         h, s, v = colorsys.rgb_to_hsv(*rgb_color)
-        #print(h, s, v)
         h = int(float(h) * 65535)
         s = int(float(s) * 65535)
-        b = int(float(v) * 65535)
+        b = int((float(v)* self.brightness_multiplier ) * 65535)
         k = int(self.kelvin)
         return (h, s, b, k)
 
