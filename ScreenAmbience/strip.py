@@ -1,4 +1,4 @@
-from .message import set_color
+from .message import set_zone_color
 
 class LightStrip(object):
     """
@@ -14,5 +14,5 @@ class LightStrip(object):
         self.mac_address = mac
         self.zones = zones
 
-    def set_light_color(self, color, zone_start, zone_end):
-        set_color(color, zone_start, zone_end, self.mac_address)
+    def set_light_color(self, color, duration, zone_start, zone_end):
+        set_zone_color(color, duration, self.mac_address, zone_start, zone_end)

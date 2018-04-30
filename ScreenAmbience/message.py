@@ -32,11 +32,12 @@ def make_frame_header(size, origin, tagged, addressable, protocol, source):
     frame_header = byteswap(FRAME_HEADER_BYTESWAP, unswapped_header)
     return frame_header
 
-def make_frame_address(target, ack_required, res_required, sequence, mac_address):
-    mac = int(mac_address, 16)
-
-    unswapped_header = pack(FRAME_ADDRESS_FORMAT, mac, 0, 0, ack_required, res_required, sequence)
-    
+def make_frame_address(target, ack_required, res_required, sequence):
+    target = target.split(':')
+    target.reverse()
+    target = ''.join(target)
+    target = int(target, 16)
+    unswapped_header = pack(FRAME_ADDRESS_FORMAT, target, 0, 0, ack_required, res_required, sequence)
     frame_address = byteswap(FRAME_ADDRESS_BYTESWAP, unswapped_header)
     return frame_address
 
@@ -47,16 +48,16 @@ def make_protocol_header(message_type):
     return protocol_header
 
 
-def set_color(average_screen_color, start, end, mac_address):
+def set_zone_color(average_screen_color, duration, mac_address, start, end):
     payload_format = 'u8u8u16u16u16u16u32u8'
     payload_byteswap = '11222241'
 
     packet_size = (sizeof(FRAME_HEADER_FORMAT + FRAME_ADDRESS_FORMAT + PROTOCOL_HEADER_FORMAT + payload_format)) / 8
     frame_header = make_frame_header(packet_size, 0, 0, 1, 1024, 0)
-    frame_address = make_frame_address(0, 0, 0, 0, mac_address)
+    frame_address = make_frame_address(mac_address, 0, 0, 0)
     protocol_header = make_protocol_header(501)
     header = frame_header + frame_address + protocol_header
-    unswapped_payload = pack (payload_format, start, end, *average_screen_color, 1)
+    unswapped_payload = pack (payload_format, start, end, *average_screen_color, duration, 1)
     payload = byteswap(payload_byteswap, unswapped_payload)
     packet = header + payload
     send_packet(packet)
