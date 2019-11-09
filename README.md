@@ -97,7 +97,7 @@ def stream_lights(screen_width, screen_height, light):
         for i, region in enumerate(color_regions):
             light.set_light_color(region.get_average_color(), duration, i, i)
 
-mac = '1234567890'
+mac = 'abcdef123456'
 light = LightStrip(mac, 10)
 stream_lights(*get_transformed_ratio(), light)
 ```
